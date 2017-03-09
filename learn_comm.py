@@ -1,15 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import threading as th
+import time
 import nengo
 import nengo_spinnaker
-from scipy.interpolate import interp1d
+#from scipy.interpolate import interp1d
 import allbot
 
 dimensions = 3
 spinnaker = False
 
-#Allbot = allbot.Allbot()
+Allbot = allbot.Allbot()
 model = nengo.Network()
 with model:
     num_neurons = dimensions * 30
@@ -39,7 +40,7 @@ with model:
     # Connect the error into the learning rule
     nengo.Connection(error, conn.learning_rule)
 
-    inp2 = nengo.Node(lambda t: -np.cos(t*4), size_out=dimensions)
+    inp2 = nengo.Node(lambda t: -np.sin(t*4), size_out=dimensions)
     pre2 = nengo.Ensemble(num_neurons, dimensions=dimensions)
     nengo.Connection(inp2, pre2)
     post2 = nengo.Ensemble(num_neurons, dimensions=dimensions)
@@ -69,19 +70,18 @@ simTime  = 10
 for t in range(simTime):
     sim.run(1.0)
 
-inter = interp1d([-1.1,1.1],[0,90])
-#data_new = []
-#samples = np.arange(0,20000,16)
-
-#for d in range(dimensions):
-data_1 = inter(sim.data[post_p].T[0][::500])
-data_2 = inter(sim.data[post_p2].T[0][::500])
-cmd1 = data_1.astype(int)
-cmd2 = data_2.astype(int)
-print(cmd1)
-for value1, value2 in zip(cmd1,cmd2):
-    #Allbot.command_robot(value1,value2,value1,value2,value1,value2,value1,value2)
-    print(value1)
+    #for d in range(dimensions):
+    print(len(sim.data[post_p].T))
+    data_1 = (sim.data[post_p].T[0][t*100:(t+20)*100:100] + 1.1)*90/2.2
+    data_2 = (sim.data[post_p2].T[0][t*100:(t+20)*100:100] + 1.1)*90/2.2
+    cmd1 = data_1.astype(int)
+    cmd2 = data_2.astype(int)
+    print(cmd1)
+    for value1, value2 in zip(cmd1,cmd2):
+        cmd = {'0':value1,'1':value2,'2':value1,'3':value2,'4':value1,'5':value2,'6':value1,'7':value2}
+        print(cmd)
+        #Allbot.command_robot(cmd)
+        time.sleep(1)
 figure, axes = plt.subplots(dimensions + 1, sharex=True)
 
 for a, d in zip(axes, range(dimensions)):
